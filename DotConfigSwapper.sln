@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigSwapper", "ConfigSwapper\ConfigSwapper.csproj", "{957D3E23-E176-4D6C-B97A-2167CD48A121}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotConfigSwapper", "DotConfigSwapper\DotConfigSwapper.csproj", "{957D3E23-E176-4D6C-B97A-2167CD48A121}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
