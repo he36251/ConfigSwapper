@@ -1,4 +1,5 @@
-﻿using Spectre.Console;
+﻿using ConfigSwapper.Extensions;
+using Spectre.Console;
 
 namespace ConfigSwapper;
 
@@ -22,13 +23,28 @@ public static class ConsolePresenter
         AnsiConsole.Write(new Rule($"[yellow]Found [bold]{count}[/] config files to swap[/]").RuleStyle("grey").LeftAligned());
     }
 
-    public static void ErrorMessage(IEnumerable<string> errorMessages)
+    public static void ErrorMessage(string errorMessage, IEnumerable<string>? errorDetails = null, bool isExit = false)
     {
         AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine(errorMessage.MarkupError(true));
 
-        foreach (var errorMessage in errorMessages)
+        if (errorDetails != null)
         {
-            AnsiConsole.MarkupLine(errorMessage, new Style(Color.Red));
+            var table = new Table();
+            table.AddColumn("");
+            table.HideHeaders();
+            
+            foreach (var errorDetail in errorDetails)
+            {
+                table.AddRow("- " + errorDetail.MarkupError());
+            }
+            
+            AnsiConsole.Write(table);
+        }
+
+        if (isExit)
+        {
+            AnsiConsole.WriteLine("Exiting DotConfigSwapper...");
         }
     }
 

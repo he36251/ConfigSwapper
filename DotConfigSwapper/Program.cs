@@ -10,38 +10,27 @@ ConsolePresenter.FoundConfigsCountMessage(files.Length);
 
 if (files.Length == 0)
 {
-    var errorMessages = new[]
-    {
-        "No config files found in " + configsFolderPath,
-        "Exiting DotConfigSwapper..."
-    };
-
-    ConsolePresenter.ErrorMessage(errorMessages);
+    ConsolePresenter.ErrorMessage("No config files found in " + configsFolderPath, null, true);
     return;
 }
 
 var selectedConfigs = ConsolePresenter.AskConfigsToSwap(files);
 var inputConfigs = ConfigsProcessor.GetConfigs(selectedConfigs).ToList();
 
-var invalidConfigs = new List<string>();
+List<string> invalidConfigs;
 try
 {
     invalidConfigs = ConfigsProcessor.ValidateTargetConfigPaths(inputConfigs).ToList();
 }
 catch (Exception e)
 {
-    ConsolePresenter.ErrorMessage(new[]
-    {
-        e.Message,
-        "Exiting DotConfigSwapper..."
-    });
-    Environment.Exit(0);
+    ConsolePresenter.ErrorMessage(e.Message, null, true);
+    return;
 }
 
 if (invalidConfigs.Any())
 {
-    var errorMessages = invalidConfigs.Prepend("Could not find the following target config files:");
-    ConsolePresenter.ErrorMessage(errorMessages);
+    ConsolePresenter.ErrorMessage("Could not find the following target config files:", invalidConfigs, true);
     return;
 }
 
