@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ConfigSwapper;
+namespace ConfigSwapper.Models;
 
 public class ConfigValue
 {

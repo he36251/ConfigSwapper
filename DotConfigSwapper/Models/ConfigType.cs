@@ -1,4 +1,4 @@
-﻿namespace ConfigSwapper;
+﻿namespace ConfigSwapper.Models;
 
 public static class ConfigType
 {

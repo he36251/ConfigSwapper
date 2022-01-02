@@ -1,68 +1,48 @@
-﻿using System.Text.Json;
-using System.Xml;
-using ConfigSwapper;
+﻿using ConfigSwapper;
 
-var exampleConfigPath = @"./config-example.json";
+ConsolePresenter.StartupMessage();
 
-var rawInputConfigJson = File.ReadAllText(exampleConfigPath);
-if (string.IsNullOrEmpty(rawInputConfigJson))
+// Get config files from home path
+var configsFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"/DotConfigSwapper";
+var files = Directory.GetFiles(configsFolderPath, "*.json");
+
+ConsolePresenter.FoundConfigsCountMessage(files.Length);
+
+if (files.Length == 0)
 {
-    throw new FileNotFoundException(exampleConfigPath);
-}
-
-var inputConfig = JsonSerializer.Deserialize<InputConfig>(rawInputConfigJson);
-if (inputConfig == null)
-{
-    throw new Exception("Failed to deserialize input config - Value is null");
-}
-
-foreach (var inputConfigFile in inputConfig.ConfigFiles)
-{
-    switch (inputConfigFile.Type)
+    var errorMessages = new[]
     {
-        case ConfigType.Config:
-            ProcessXmlConfigs(inputConfigFile);
-        break;
-    }
+        "No config files found in " + configsFolderPath,
+        "Exiting DotConfigSwapper..."
+    };
+
+    ConsolePresenter.ErrorMessage(errorMessages);
+    return;
 }
 
-// TODO: Put this in another class
-void ProcessXmlConfigs(ConfigFile inputConfigFile)
+var selectedConfigs = ConsolePresenter.AskConfigsToSwap(files);
+var inputConfigs = ConfigsProcessor.GetConfigs(selectedConfigs).ToList();
+
+var invalidConfigs = new List<string>();
+try
 {
-    var xDoc = new XmlDocument();
-    xDoc.Load(inputConfigFile.FileName);
-
-    // <connectionStrings/>
-    var connectionStrings = xDoc.GetElementsByTagName("connectionStrings");
-    foreach (XmlNode connectionString in connectionStrings)
-    {
-        // List of <add/> nodes 
-        var addNodes = connectionString.ChildNodes;
-        foreach (XmlElement addNode in addNodes)
-        {
-            if (addNode.Name == "add")
-            {
-                addNode.SetAttribute("connectionString", "Data Source=localhost;Initial Catalog=testdb;Integrated Security=True");
-            }
-        }
-    }
-
-    var appsettings = xDoc.GetElementsByTagName("appSettings");
-    foreach (XmlNode appsetting in appsettings)
-    {
-        // List of <add/> nodes 
-        var addNodes = appsetting.ChildNodes;
-        foreach (XmlElement addNode in addNodes)
-        {
-            if (addNode.Name == "add")
-            {
-                if (addNode.GetAttribute("key") == "LoginApi.BaseUrl")
-                {
-                    addNode.SetAttribute("value", "http://localhost:5000");
-                }
-            }
-        }
-    }
-
-    xDoc.Save(inputConfigFile.FileName);
+    invalidConfigs = ConfigsProcessor.ValidateTargetConfigPaths(inputConfigs).ToList();
 }
+catch (Exception e)
+{
+    ConsolePresenter.ErrorMessage(new[]
+    {
+        e.Message,
+        "Exiting DotConfigSwapper..."
+    });
+    Environment.Exit(0);
+}
+
+if (invalidConfigs.Any())
+{
+    var errorMessages = invalidConfigs.Prepend("Could not find the following target config files:");
+    ConsolePresenter.ErrorMessage(errorMessages);
+    return;
+}
+
+ConfigsProcessor.ExecuteSelectedConfigs(inputConfigs);
